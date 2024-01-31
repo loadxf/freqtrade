@@ -23,6 +23,37 @@ from ccxt.base.errors import InvalidNonce
 from ccxt.base.errors import AuthenticationError
 from ccxt.base.decimal_to_precision import TICK_SIZE
 
+import logging
+import ccxt
+from freqtrade.exchange import Exchange
+from freqtrade.exchange.common import retrier
+from freqtrade.exceptions import TemporaryError
+
+logger = logging.getLogger(__name__)
+
+class Latoken(Exchange):
+    """
+    Latoken exchange class. Implements the Latoken exchange functionalities.
+    """
+
+
+    # Implement or override methods specific to Latoken
+    # Example: Override fetching balance
+    @retrier
+    def get_balance(self):
+        if self._config['dry_run']:
+            return {}
+
+        try:
+            return self._api.fetch_balance()
+        except ccxt.NetworkError as e:
+            raise TemporaryError(f'Could not load balance due to network error: {e}') from e
+        except ccxt.ExchangeError as e:
+            raise TemporaryError(f'Could not load balance due to exchange error: {e}') from e
+        except ccxt.BaseError as e:
+            raise TemporaryError(f'Could not load balance due to unknown error: {e}') from e
+
+
 
 class latoken(Exchange, ImplicitAPI):
 
